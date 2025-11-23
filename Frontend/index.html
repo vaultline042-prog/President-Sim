@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>President Sim v2.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Core logic -->
+  <script src="core.js" defer></script>
+</head>
+<body>
+
+  <!-- Title Screen -->
+  <div id="titleScreen" class="overlay overlay-title">
+    <h1>PRESIDENT SIM</h1>
+    <div class="country-select">
+      <div class="country-card" data-country="India">
+        <div class="flag">
+          <!-- India flag (inline SVG) -->
+          <svg viewBox="0 0 9 6" class="flag-svg">
+            <rect width="9" height="2" fill="#FF9933"></rect>
+            <rect y="2" width="9" height="2" fill="#FFFFFF"></rect>
+            <rect y="4" width="9" height="2" fill="#138808"></rect>
+            <circle cx="4.5" cy="3" r="0.5" fill="#000080"></circle>
+            <circle cx="4.5" cy="3" r="0.45" fill="none" stroke="#000080" stroke-width="0.05"></circle>
+          </svg>
+        </div>
+        <p>India</p>
+      </div>
+
+      <div class="country-card" data-country="USA">
+        <div class="flag">
+          <!-- USA flag simplified (inline SVG) -->
+          <svg viewBox="0 0 19 10" class="flag-svg">
+            <rect width="19" height="10" fill="#B22234"></rect>
+            <g fill="#FFFFFF">
+              <rect y="1" width="19" height="1"></rect>
+              <rect y="3" width="19" height="1"></rect>
+              <rect y="5" width="19" height="1"></rect>
+              <rect y="7" width="19" height="1"></rect>
+              <rect y="9" width="19" height="1"></rect>
+            </g>
+            <rect width="7.6" height="5.5" fill="#3C3B6E"></rect>
+          </svg>
+        </div>
+        <p>USA</p>
+      </div>
+
+      <div class="country-card" data-country="Japan">
+        <div class="flag">
+          <!-- Japan flag (inline SVG) -->
+          <svg viewBox="0 0 9 6" class="flag-svg">
+            <rect width="9" height="6" fill="#FFFFFF"></rect>
+            <circle cx="4.5" cy="3" r="1.5" fill="#BC002D"></circle>
+          </svg>
+        </div>
+        <p>Japan</p>
+      </div>
+    </div>
+
+    <div class="start-form">
+      <label>Player</label>
+      <input id="playerName" type="text" placeholder="Ashaz" />
+      <label>Difficulty</label>
+      <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="normal" selected>Normal</option>
+        <option value="hard">Hard</option>
+        <option value="cosmic">Cosmic</option>
+      </select>
+    </div>
+
+    <button class="btn" id="startBtn">Start Presidency</button>
+  </div>
+
+  <!-- HUD -->
+  <div id="hudOverlay" class="hud">
+    <div class="hud-left">
+      <div class="hud-stat"><span>Approval:</span> <b id="hudApproval">60%</b></div>
+      <div class="hud-stat"><span>Stability:</span> <b id="hudStability">55%</b></div>
+      <div class="hud-stat"><span>Economy:</span> <b id="hudEconomy">70%</b></div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-stat"><span>Justice:</span> <b id="hudJustice">50%</b></div>
+      <div class="hud-stat"><span>Power:</span> <b id="hudPower">50%</b></div>
+      <div class="hud-stat"><span>Chaos:</span> <b id="hudChaos">10%</b></div>
+    </div>
+    <div class="hud-controls">
+      <button class="btn btn-small" onclick="openOverlay('lawPanel')">Law</button>
+      <button class="btn btn-small" onclick="openOverlay('diplomacyOverlay')">Diplomacy</button>
+      <button class="btn btn-small" onclick="openOverlay('crisisPanel')">Crisis</button>
+      <button class="btn btn-small" onclick="openOverlay('rebellionOverlay')">Rebellion</button>
+      <button class="btn btn-small" onclick="openOverlay('cosmicOverlay')">Cosmic</button>
+      <button class="btn btn-small" onclick="openOverlay('timelineOverlay')">Timeline</button>
+      <button class="btn btn-small btn-accent" onclick="endAndArchive()">End + Archive</button>
+    </div>
+  </div>
+
+  <!-- Dialogue bar -->
+  <div id="dialogueBar" class="dialogue">Welcome to President Sim</div>
+
+  <!-- Timeline -->
+  <div id="timelineOverlay" class="overlay overlay-panel">
+    <h2>TIMELINE</h2>
+    <div id="timelineList" class="timeline-list"></div>
+    <button class="btn" onclick="closeOverlay('timelineOverlay')">Close</button>
+  </div>
+
+  <!-- Law Panel -->
+  <div id="lawPanel" class="overlay overlay-panel">
+    <h2>ENFORCE LAW</h2>
+    <label>Type</label>
+    <select id="lawType">
+      <option value="generic">Generic</option>
+      <option value="tax">Tax Reform</option>
+      <option value="rights">Civil Rights</option>
+    </select>
+    <label>Description</label>
+    <input id="lawDesc" type="text" placeholder="Describe the law..." />
+    <button class="btn" onclick="handleEnforceLaw()">Apply</button>
+    <button class="btn" onclick="closeOverlay('lawPanel')">Close</button>
+  </div>
+
+  <!-- Crisis Panel -->
+  <div id="crisisPanel" class="overlay overlay-panel">
+    <h2>CRISIS RESPONSE</h2>
+    <div class="btn-row">
+      <button class="btn" onclick="handleResolveCrisis('negotiate')">Negotiate</button>
+      <button class="btn" onclick="handleResolveCrisis('suppress')">Suppress</button>
+      <button class="btn" onclick="handleResolveCrisis('appease')">Appease</button>
+    </div>
+    <button class="btn" onclick="closeOverlay('crisisPanel')">Close</button>
+  </div>
+
+  <!-- Diplomacy Overlay -->
+  <div id="diplomacyOverlay" class="overlay overlay-panel">
+    <h2>GLOBAL DIPLOMACY</h2>
+    <div class="btn-row">
+      <button class="btn" onclick="handleDiplomacy('treaty')">Treaty</button>
+      <button class="btn" onclick="handleDiplomacy('trade')">Trade Deal</button>
+      <button class="btn" onclick="handleDiplomacy('rivalry')">Rivalry</button>
+    </div>
+    <button class="btn" onclick="closeOverlay('diplomacyOverlay')">Close</button>
+  </div>
+
+  <!-- Rebellion Overlay -->
+  <div id="rebellionOverlay" class="overlay overlay-panel rebellion">
+    <h2>REBELLION</h2>
+    <div class="btn-row">
+      <button class="btn" onclick="handleRebellion('negotiate')">Negotiate</button>
+      <button class="btn" onclick="handleRebellion('suppress')">Suppress</button>
+      <button class="btn" onclick="handleRebellion('appease')">Appease</button>
+    </div>
+    <button class="btn" onclick="closeOverlay('rebellionOverlay')">Close</button>
+  </div>
+
+  <!-- Cosmic Mode Overlay -->
+  <div id="cosmicOverlay" class="overlay overlay-panel cosmic">
+    <h2>COSMIC MODE 🌌</h2>
+    <div class="btn-row">
+      <button class="btn" onclick="handleCosmic('anomaly')">Invoke Anomaly</button>
+      <button class="btn" onclick="handleCosmic('entity')">Summon Entity</button>
+      <button class="btn" onclick="handleCosmic('distort')">Distort Legacy</button>
+    </div>
+    <button class="btn" onclick="closeOverlay('cosmicOverlay')">Close</button>
+  </div>
+
+  <!-- Advisors strip with working portraits -->
+  <div class="advisors">
+    <div class="advisor">
+      <!-- Minimal inline SVG portrait -->
+      <svg viewBox="0 0 24 24" class="avatar">
+        <circle cx="12" cy="8" r="5" fill="#ffd166"></circle>
+        <rect x="5" y="13" width="14" height="8" rx="4" fill="#06d6a0"></rect>
+      </svg>
+      <span>Chief Advisor</span>
+    </div>
+    <div class="advisor">
+      <svg viewBox="0 0 24 24" class="avatar">
+        <circle cx="12" cy="8" r="5" fill="#118ab2"></circle>
+        <rect x="5" y="13" width="14" height="8" rx="4" fill="#ef476f"></rect>
+      </svg>
+      <span>Economic Advisor</span>
+    </div>
+    <div class="advisor">
+      <svg viewBox="0 0 24 24" class="avatar">
+        <circle cx="12" cy="8" r="5" fill="#8338ec"></circle>
+        <rect x="5" y="13" width="14" height="8" rx="4" fill="#3a86ff"></rect>
+      </svg>
+      <span>Defense Advisor</span>
+    </div>
+  </div>
+
+  <!-- Archive Overlay -->
+  <div id="archiveOverlay" class="overlay overlay-panel archive">
+    <h2>MYTHIC ARCHIVE EXPORT</h2>
+    <p id="archiveMsg">Preparing archive...</p>
+    <button class="btn" onclick="closeOverlay('archiveOverlay')">Close</button>
+  </div>
+
+  <!-- Final Vaultline Screen -->
+  <div id="vaultlineOverlay" class="overlay overlay-full vaultline">
+    <h2>FINAL VAULTLINE ENTRY</h2>
+    <div class="vaultline-summary">
+      <p id="vaultlineStats">Stats will appear here.</p>
+      <p id="vaultlineGlyphs">Glyphs will appear here.</p>
+    </div>
+    <button class="btn" onclick="returnToTitle()">Return to Title</button>
+  </div>
+
+</body>
+</html>
