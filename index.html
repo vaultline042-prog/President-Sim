@@ -1,0 +1,2100 @@
+<!DOCTYPE html>
+<head>
+  <title>President Sim</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: url('pixelated-office-bg.png') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Press Start 2P', cursive;
+      color: white;
+      text-align: center;
+      margin-top: 100px;
+    }
+    h1 {
+      font-size: 48px;
+      margin-bottom: 40px;
+      text-shadow: 2px 2px #000;
+    }
+    button {
+      display: block;
+      margin: 20px auto;
+      padding: 15px 40px;
+      font-size: 16px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: 2px solid white;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .saves {
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <h1>PRESIDENT SIM</h1>
+  <button onclick="startGame()">START</button>
+  <p>PRESIDENT SIM</p>
+
+  <div class="saves">
+    <h2>Continue:</h2>
+    <button onclick="loadGame(1)">Save 1</button>
+    <button onclick="loadGame(2)">Save 2</button>
+    <button onclick="loadGame(3)">Save 3</button>
+  </div>
+  <!-- Dialogue Box (appears at top, fades after 2s) -->
+  <div id="dialogueBox" class="dialogue-box"></div>
+
+  <!-- Law Input Panel -->
+  <div class="law-panel">
+    <div class="law-box">
+      <label for="lawInput">Type Your Law:</label>
+      <input type="text" id="lawInput" maxlength="50" placeholder="Enter law here...">
+    </div>
+    <button class="enforce-btn" onclick="enforceLaw()">ENFORCE</button>
+  </div>
+
+  <style>
+    .dialogue-box {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      font-family: 'Press Start 2P', cursive;
+      padding: 15px 30px;
+      border-radius: 12px;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    .law-panel {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 60px;
+    }
+
+    .law-box {
+      background: rgba(255,255,255,0.1);
+      border: 2px solid white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-right: 20px;
+    }
+
+    .law-box input {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      color: white;
+      width: 250px;
+    }
+
+    .enforce-btn {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      padding: 15px 25px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: 2px solid white;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    function showDialogue(message) {
+      const box = document.getElementById("dialogueBox");
+      box.textContent = message;
+      box.style.opacity = 1;
+      setTimeout(() => {
+        box.style.opacity = 0;
+      }, 2000); // disappears after 2 seconds
+    }
+
+    function enforceLaw() {
+      const law = document.getElementById("lawInput").value;
+      if (!law || /\d/.test(law)) {
+        showDialogue("That cannot be the law.");
+      } else {
+        showDialogue("Law enforced: " + law);
+        // backend will calculate consequences
+      }
+    }
+  </script>
+  <!-- Left Panel: Country Stats -->
+  <div class="stats-panel left-panel">
+    <h3>Country Stats</h3>
+    <p>Economy: <span id="economyStat">70%</span></p>
+    <p>Stability: <span id="stabilityStat">55%</span></p>
+    <p>Approval: <span id="approvalStat">60%</span></p>
+    <p>Allies: <span id="alliesStat">India, Japan</span></p>
+  </div>
+
+  <!-- Right Panel: Compliance Probabilities -->
+  <div class="stats-panel right-panel">
+    <h3>Law Compliance</h3>
+    <p>Loyal Citizens: <span id="loyalStat">65%</span></p>
+    <p>Neutral Citizens: <span id="neutralStat">40%</span></p>
+    <p>Rebels: <span id="rebelStat">10%</span></p>
+  </div>
+
+  <style>
+    .stats-panel {
+      position: fixed;
+      top: 200px;
+      width: 250px;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid white;
+      border-radius: 16px;
+      padding: 20px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      color: white;
+      text-shadow: 1px 1px #000;
+    }
+
+    .left-panel {
+      left: 40px;
+    }
+
+    .right-panel {
+      right: 40px;
+    }
+
+    .stats-panel h3 {
+      font-size: 14px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .stats-panel p {
+      margin: 8px 0;
+    }
+  </style>
+  <!-- Crisis Panel (hidden until triggered) -->
+  <div id="crisisPanel" class="crisis-panel">
+    <h3>CRISIS ALERT</h3>
+    <p id="crisisType">Type: Unknown</p>
+    <p id="crisisMessage">Message: No crisis yet.</p>
+    <div class="crisis-actions">
+      <button onclick="handleCrisis('enforce')">Enforce Law</button>
+      <button onclick="handleCrisis('negotiate')">Negotiate</button>
+      <button onclick="handleCrisis('ignore')">Ignore</button>
+    </div>
+    <div class="crisis-consequences">
+      <p id="consequenceApproval">Approval: ?</p>
+      <p id="consequenceStability">Stability: ?</p>
+      <p id="consequenceLegacy">Legacy: ?</p>
+    </div>
+  </div>
+
+  <style>
+    .crisis-panel {
+      position: fixed;
+      bottom: -300px; /* hidden by default */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 400px;
+      background: rgba(0,0,0,0.7);
+      border: 2px solid white;
+      border-radius: 16px;
+      padding: 20px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      color: white;
+      text-align: center;
+      transition: bottom 0.5s ease-in-out;
+    }
+
+    .crisis-panel h3 {
+      font-size: 16px;
+      margin-bottom: 15px;
+      text-shadow: 1px 1px #000;
+    }
+
+    .crisis-actions button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 2px solid white;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .crisis-consequences {
+      margin-top: 15px;
+      text-align: left;
+    }
+  </style>
+
+  <script>
+    function triggerCrisis(type, message, consequences) {
+      document.getElementById("crisisType").textContent = "Type: " + type;
+      document.getElementById("crisisMessage").textContent = "Message: " + message;
+      document.getElementById("consequenceApproval").textContent = "Approval: " + consequences.approval;
+      document.getElementById("consequenceStability").textContent = "Stability: " + consequences.stability;
+      document.getElementById("consequenceLegacy").textContent = "Legacy: " + consequences.legacy;
+
+      const panel = document.getElementById("crisisPanel");
+      panel.style.bottom = "40px"; // slide up into view
+      setTimeout(() => {
+        panel.style.bottom = "-300px"; // auto-hide after 10s
+      }, 10000);
+    }
+
+    function handleCrisis(action) {
+      showDialogue("Crisis handled with action: " + action);
+      // backend will calculate actual effects
+    }
+  </script>
+  <!-- Vaultline Log Panel -->
+  <div id="vaultlineLog" class="vaultline-panel">
+    <h3>VAULTLINE LOG</h3>
+    <ul id="logEntries">
+      <!-- Entries will be appended here -->
+    </ul>
+  </div>
+
+  <style>
+    .vaultline-panel {
+      position: fixed;
+      bottom: 40px;
+      left: 40px;
+      width: 300px;
+      max-height: 250px;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.6);
+      border: 2px solid white;
+      border-radius: 16px;
+      padding: 15px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 10px;
+      color: white;
+      text-shadow: 1px 1px #000;
+    }
+
+    .vaultline-panel h3 {
+      font-size: 12px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .vaultline-panel ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .vaultline-panel li {
+      margin: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      padding-bottom: 4px;
+    }
+  </style>
+
+  <script>
+    function addLogEntry(entry) {
+      const log = document.getElementById("logEntries");
+      const li = document.createElement("li");
+      li.textContent = entry;
+      log.appendChild(li);
+    }
+
+    // Example usage:
+    // addLogEntry("[Law Enforced] Curfew at 9 PM – Approval -5%, Stability +10%");
+    // addLogEntry("[Crisis Triggered] Alien threat detected – Chaos +25");
+  </script>
+  <!-- Save/Load Overlay -->
+  <div id="saveOverlay" class="save-overlay">
+    <h3>SAVE / LOAD MENU</h3>
+    <div class="save-slots">
+      <button onclick="saveGame(1)">Save Slot 1</button>
+      <button onclick="saveGame(2)">Save Slot 2</button>
+      <button onclick="saveGame(3)">Save Slot 3</button>
+    </div>
+    <div class="load-slots">
+      <button onclick="loadGame(1)">Load Slot 1</button>
+      <button onclick="loadGame(2)">Load Slot 2</button>
+      <button onclick="loadGame(3)">Load Slot 3</button>
+    </div>
+    <button onclick="closeSaveOverlay()">Close</button>
+  </div>
+
+  <style>
+    .save-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      background: rgba(0,0,0,0.8);
+      border: 2px solid white;
+      border-radius: 16px;
+      padding: 20px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      color: white;
+      text-align: center;
+      display: none; /* hidden until opened */
+      z-index: 999;
+    }
+
+    .save-overlay h3 {
+      font-size: 16px;
+      margin-bottom: 20px;
+      text-shadow: 1px 1px #000;
+    }
+
+    .save-slots, .load-slots {
+      margin: 15px 0;
+    }
+
+    .save-overlay button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 2px solid white;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    function openSaveOverlay() {
+      document.getElementById("saveOverlay").style.display = "block";
+    }
+
+    function closeSaveOverlay() {
+      document.getElementById("saveOverlay").style.display = "none";
+    }
+
+    function saveGame(slot) {
+      showDialogue("Game saved to Slot " + slot);
+      // backend will handle actual save logic
+    }
+
+    function loadGame(slot) {
+      showDialogue("Loading from Slot " + slot);
+      // backend will handle actual load logic
+    }
+  </script>
+  <!-- Game Over Overlay -->
+  <div id="gameOverOverlay" class="game-over-overlay">
+    <h2>GAME OVER</h2>
+    <p id="gameOverMessage">Your presidency has ended.</p>
+    <div class="game-over-actions">
+      <button onclick="retryGame()">Retry</button>
+      <button onclick="returnToTitle()">Return to Title</button>
+    </div>
+  </div>
+
+  <style>
+    .game-over-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px;
+      background: rgba(0,0,0,0.85);
+      border: 3px solid white;
+      border-radius: 20px;
+      padding: 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      color: white;
+      text-align: center;
+      display: none; /* hidden until triggered */
+      z-index: 1000;
+    }
+
+    .game-over-overlay h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px #000;
+    }
+
+    .game-over-overlay p {
+      margin-bottom: 25px;
+    }
+
+    .game-over-actions button {
+      margin: 10px;
+      padding: 12px 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 2px solid white;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    function triggerGameOver(reason) {
+      document.getElementById("gameOverMessage").textContent = reason;
+      document.getElementById("gameOverOverlay").style.display = "block";
+    }
+
+    function retryGame() {
+      showDialogue("Retrying presidency...");
+      // backend resets stats and restarts game
+      document.getElementById("gameOverOverlay").style.display = "none";
+    }
+
+    function returnToTitle() {
+      showDialogue("Returning to title screen...");
+      // backend returns to title state
+      document.getElementById("gameOverOverlay").style.display = "none";
+    }
+  </script>
+  <script>
+    // Backgrounds for each country (use your generated pixel art assets)
+    const countryBackgrounds = {
+      "India": "india-office.png",
+      "Japan": "japan-office.png",
+      "USA": "usa-office.png"
+    };
+
+    // Function to set background based on country
+    function setCountryBackground(country) {
+      const bg = countryBackgrounds[country] || countryBackgrounds["USA"];
+      document.body.style.backgroundImage = `url('${bg}')`;
+      document.body.style.backgroundSize = "cover";
+      document.body.style.backgroundRepeat = "no-repeat";
+      document.body.style.backgroundPosition = "center center";
+    }
+
+    // Example usage: randomly assign country at game start
+    function assignRandomCountry() {
+      const countries = ["India", "Japan", "USA"];
+      const randomCountry = countries[Math.floor(Math.random() * countries.length)];
+      showDialogue("You are the President of " + randomCountry);
+      setCountryBackground(randomCountry);
+      return randomCountry;
+    }
+
+    // Call this when starting a new game
+    // const currentCountry = assignRandomCountry();
+  </script>
+  <!-- Citizen Reaction Overlay -->
+  <div id="citizenReaction" class="reaction-overlay"></div>
+
+  <style>
+    .reaction-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none; /* overlay doesn't block clicks */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 32px;
+      color: white;
+      text-shadow: 2px 2px #000;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      z-index: 1000;
+    }
+
+    .reaction-cheer {
+      color: #00ff00; /* green cheer */
+    }
+
+    .reaction-boo {
+      color: #ff0000; /* red boo */
+    }
+
+    .reaction-rebel {
+      color: #ff9900; /* orange rebel */
+    }
+  </style>
+
+  <script>
+    function showReaction(type) {
+      const overlay = document.getElementById("citizenReaction");
+      overlay.className = "reaction-overlay reaction-" + type;
+
+      if (type === "cheer") overlay.textContent = "👏 Citizens Cheer!";
+      else if (type === "boo") overlay.textContent = "👎 Citizens Boo!";
+      else if (type === "rebel") overlay.textContent = "⚔️ Rebels Rise!";
+
+      overlay.style.opacity = 1;
+
+      setTimeout(() => {
+        overlay.style.opacity = 0;
+      }, 2000); // fades out after 2 seconds
+    }
+
+    // Example usage:
+    // showReaction("cheer");
+    // showReaction("boo");
+    // showReaction("rebel");
+  </script>
+  <!-- Legacy Meter Panel -->
+  <div class="legacy-panel">
+    <h3>LEGACY METER</h3>
+    <div class="meter">
+      <label>⚖️ Justice</label>
+      <div class="bar"><div id="justiceBar" class="fill justice"></div></div>
+    </div>
+    <div class="meter">
+      <label>⚡ Power</label>
+      <div class="bar"><div id="powerBar" class="fill power"></div></div>
+    </div>
+    <div class="meter">
+      <label>🌪️ Chaos</label>
+      <div class="bar"><div id="chaosBar" class="fill chaos"></div></div>
+    </div>
+  </div>
+
+  <style>
+    .legacy-panel {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      width: 250px;
+      background: rgba(0,0,0,0.6);
+      border: 2px solid white;
+      border-radius: 16px;
+      padding: 15px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      color: white;
+      text-shadow: 1px 1px #000;
+    }
+
+    .legacy-panel h3 {
+      font-size: 14px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .meter {
+      margin: 10px 0;
+    }
+
+    .meter label {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .bar {
+      width: 100%;
+      height: 14px;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .fill {
+      height: 100%;
+      transition: width 0.5s ease-in-out;
+    }
+
+    .justice {
+      background: #00ffcc; /* teal for justice */
+    }
+
+    .power {
+      background: #ffff00; /* yellow for power */
+    }
+
+    .chaos {
+      background: #ff3300; /* red for chaos */
+    }
+  </style>
+
+  <script>
+    function updateLegacyMeter(justice, power, chaos) {
+      document.getElementById("justiceBar").style.width = justice + "%";
+      document.getElementById("powerBar").style.width = power + "%";
+      document.getElementById("chaosBar").style.width = chaos + "%";
+    }
+
+    // Example usage:
+    // updateLegacyMeter(40, 60, 20);
+  </script>
+  <!-- Random Event Popup -->
+  <div id="eventPopup" class="event-popup"></div>
+
+  <style>
+    .event-popup {
+      position: fixed;
+      top: 80px;
+      right: 50%;
+      transform: translateX(50%);
+      background: rgba(0,0,0,0.7);
+      color: white;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      padding: 15px 25px;
+      border: 2px solid white;
+      border-radius: 12px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      z-index: 900;
+    }
+  </style>
+
+  <script>
+    const randomEvents = [
+      "🎉 Citizens celebrate a festival, approval rises slightly.",
+      "📉 Minor corruption scandal uncovered, approval drops.",
+      "🌱 Farmers demand subsidies, economy shifts.",
+      "🕵️ Spy rumors spread, stability shaken.",
+      "💡 New invention boosts productivity, economy improves."
+    ];
+
+    function triggerRandomEvent() {
+      const event = randomEvents[Math.floor(Math.random() * randomEvents.length)];
+      const popup = document.getElementById("eventPopup");
+      popup.textContent = event;
+      popup.style.opacity = 1;
+
+      setTimeout(() => {
+        popup.style.opacity = 0;
+      }, 3000); // fades out after 3 seconds
+
+      // backend will handle stat changes based on event
+      addLogEntry("[Random Event] " + event);
+    }
+
+    // Example usage:
+    // triggerRandomEvent();
+  </script>
+  <!-- Audio FX Elements -->
+  <audio id="cheerSound" src="cheer.wav" preload="auto"></audio>
+  <audio id="booSound" src="boo.wav" preload="auto"></audio>
+  <audio id="rebelSound" src="rebel.wav" preload="auto"></audio>
+  <audio id="crisisAlarm" src="crisis.wav" preload="auto"></audio>
+  <audio id="lawEnforceSound" src="law.wav" preload="auto"></audio>
+
+  <script>
+    function playSound(effect) {
+      let sound;
+      switch(effect) {
+        case "cheer": sound = document.getElementById("cheerSound"); break;
+        case "boo": sound = document.getElementById("booSound"); break;
+        case "rebel": sound = document.getElementById("rebelSound"); break;
+        case "crisis": sound = document.getElementById("crisisAlarm"); break;
+        case "law": sound = document.getElementById("lawEnforceSound"); break;
+      }
+      if (sound) {
+        sound.currentTime = 0; // reset to start
+        sound.play();
+      }
+    }
+
+    // Example usage:
+    // playSound("cheer");
+    // playSound("boo");
+    // playSound("rebel");
+    // playSound("crisis");
+    // playSound("law");
+  </script>
+  <!-- HUD Overlay -->
+  <div id="hudOverlay" class="hud-overlay">
+    <span>Approval: <span id="hudApproval">60%</span></span>
+    <span>Stability: <span id="hudStability">55%</span></span>
+    <span>Economy: <span id="hudEconomy">70%</span></span>
+  </div>
+
+  <style>
+    .hud-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      padding: 8px 0;
+      text-align: center;
+      border-bottom: 2px solid white;
+      z-index: 1000;
+    }
+
+    .hud-overlay span {
+      margin: 0 20px;
+      text-shadow: 1px 1px #000;
+    }
+  </style>
+
+  <script>
+    function updateHUD(approval, stability, economy) {
+      document.getElementById("hudApproval").textContent = approval + "%";
+      document.getElementById("hudStability").textContent = stability + "%";
+      document.getElementById("hudEconomy").textContent = economy + "%";
+    }
+
+    // Example usage:
+    // updateHUD(65, 50, 75);
+  </script>
+  <!-- Pause Menu Overlay -->
+  <div id="pauseOverlay" class="pause-overlay">
+    <h2>PAUSED</h2>
+    <div class="pause-actions">
+      <button onclick="resumeGame()">Resume</button>
+      <button onclick="openSettings()">Settings</button>
+      <button onclick="quitGame()">Quit</button>
+    </div>
+  </div>
+
+  <style>
+    .pause-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      background: rgba(0,0,0,0.85);
+      border: 3px solid white;
+      border-radius: 20px;
+      padding: 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      color: white;
+      text-align: center;
+      display: none; /* hidden until triggered */
+      z-index: 1000;
+    }
+
+    .pause-overlay h2 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px #000;
+    }
+
+    .pause-actions button {
+      margin: 10px;
+      padding: 12px 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 2px solid white;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    function openPauseMenu() {
+      document.getElementById("pauseOverlay").style.display = "block";
+      showDialogue("Game paused.");
+    }
+
+    function resumeGame() {
+      document.getElementById("pauseOverlay").style.display = "none";
+      showDialogue("Resuming presidency...");
+    }
+
+    function openSettings() {
+      showDialogue("Opening settings...");
+      // backend will handle settings overlay
+    }
+
+    function quitGame() {
+      showDialogue("Quitting presidency...");
+      // backend will handle quit logic
+      document.getElementById("pauseOverlay").style.display = "none";
+    }
+  </script>
+  <!-- Settings Overlay -->
+  <div id="settingsOverlay" class="settings-overlay">
+    <h2>SETTINGS</h2>
+
+    <div class="settings-section">
+      <label>🔊 Sound:</label>
+      <select id="soundToggle">
+        <option value="on">On</option>
+        <option value="off">Off</option>
+      </select>
+    </div>
+
+    <div class="settings-section">
+      <label>🎮 Difficulty:</label>
+      <select id="difficultySelect">
+        <option value="easy">Easy</option>
+        <option value="normal">Normal</option>
+        <option value="hard">Hard</option>
+      </select>
+    </div>
+
+    <div class="settings-section">
+      <label>🎨 Theme:</label>
+      <select id="themeSelect">
+        <option value="classic">Classic</option>
+        <option value="dark">Dark</option>
+        <option value="retro">Retro</option>
+      </select>
+    </div>
+
+    <button onclick="applySettings()">Apply</button>
+    <button onclick="closeSettings()">Close</button>
+  </div>
+
+  <style>
+    .settings-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      background: rgba(0,0,0,0.85);
+      border: 3px solid white;
+      border-radius: 20px;
+      padding: 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      color: white;
+      text-align: center;
+      display: none; /* hidden until opened */
+      z-index: 1000;
+    }
+
+    .settings-overlay h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px #000;
+    }
+
+    .settings-section {
+      margin: 15px 0;
+    }
+
+    .settings-section label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .settings-overlay select {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      padding: 5px;
+      border-radius: 8px;
+      border: 2px solid white;
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    .settings-overlay button {
+      margin: 10px;
+      padding: 12px 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 2px solid white;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    function openSettings() {
+      document.getElementById("settingsOverlay").style.display = "block";
+    }
+
+    function closeSettings() {
+      document.getElementById("settingsOverlay").style.display = "none";
+    }
+
+    function applySettings() {
+      const sound = document.getElementById("soundToggle").value;
+      const difficulty = document.getElementById("difficultySelect").value;
+      const theme = document.getElementById("themeSelect").value;
+
+      showDialogue("Settings applied: Sound " + sound + ", Difficulty " + difficulty + ", Theme " + theme);
+
+      // backend will handle actual sound toggle, difficulty scaling, and theme switching
+      closeSettings();
+    }
+  </script>
+  <!-- Tutorial Overlay -->
+  <div id="tutorialOverlay" class="tutorial-overlay">
+    <h2>TUTORIAL</h2>
+    <p id="tutorialMessage">Welcome, President! Let’s begin your journey.</p>
+    <div class="tutorial-actions">
+      <button onclick="nextTutorialStep()">Next</button>
+      <button onclick="skipTutorial()">Skip</button>
+    </div>
+  </div>
+
+  <style>
+    .tutorial-overlay {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 500px;
+      background: rgba(0,0,0,0.85);
+      border: 3px solid white;
+      border-radius: 20px;
+      padding: 25px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      color: white;
+      text-align: center;
+      display: none; /* hidden until triggered */
+      z-index: 1000;
+    }
+
+    .tutorial-overlay h2 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px #000;
+    }
+
+    .tutorial-overlay p {
+      margin-bottom: 20px;
+    }
+
+    .tutorial-actions button {
+      margin: 8px;
+      padding: 10px 25px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 2px solid white;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    const tutorialSteps = [
+      "Welcome, President! Type your first law in the input box.",
+      "Press ENFORCE to see how citizens react.",
+      "Check the left panel for country stats.",
+      "Watch the right panel for compliance probabilities.",
+      "Crisis events will appear at the bottom—choose wisely.",
+      "Your legacy meter tracks Justice, Power, and Chaos.",
+      "Vaultline Log archives every decision you make.",
+      "Good luck, President. The nation awaits your leadership!"
+    ];
+
+    let currentStep = 0;
+
+    function startTutorial() {
+      document.getElementById("tutorialOverlay").style.display = "block";
+      document.getElementById("tutorialMessage").textContent = tutorialSteps[currentStep];
+    }
+
+    function nextTutorialStep() {
+      currentStep++;
+      if (currentStep < tutorialSteps.length) {
+        document.getElementById("tutorialMessage").textContent = tutorialSteps[currentStep];
+      } else {
+        endTutorial();
+      }
+    }
+
+    function skipTutorial() {
+      showDialogue("Tutorial skipped.");
+      endTutorial();
+    }
+
+    function endTutorial() {
+      document.getElementById("tutorialOverlay").style.display = "none";
+      showDialogue("Tutorial complete. Begin your presidency!");
+    }
+  </script>
+  <!-- Achievement Overlay -->
+  <div id="achievementOverlay" class="achievement-overlay">
+    <h2>ACHIEVEMENT UNLOCKED!</h2>
+    <p id="achievementMessage">You enforced 10 laws successfully!</p>
+    <button onclick="closeAchievement()">Close</button>
+  </div>
+
+  <style>
+    .achievement-overlay {
+      position: fixed;
+      top: 30%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 450px;
+      background: rgba(0,0,0,0.85);
+      border: 3px solid gold;
+      border-radius: 20px;
+      padding: 25px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      color: gold;
+      text-align: center;
+      display: none; /* hidden until triggered */
+      z-index: 1200;
+      box-shadow: 0 0 20px gold;
+    }
+
+    .achievement-overlay h2 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px #000;
+    }
+
+    .achievement-overlay p {
+      margin-bottom: 20px;
+    }
+
+    .achievement-overlay button {
+      margin: 10px;
+      padding: 10px 25px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: gold;
+      border: 2px solid gold;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    const achievements = {
+      laws10: "You enforced 10 laws successfully!",
+      crises3: "You survived 3 crises!",
+      justice100: "Justice reached 100%! A legendary presidency!",
+      chaos50: "Chaos exceeded 50%! Rebels dominate history!",
+      legacyVault: "Vaultline Log archived 20 entries!"
+    };
+
+    function unlockAchievement(key) {
+      const message = achievements[key];
+      if (message) {
+        document.getElementById("achievementMessage").textContent = message;
+        document.getElementById("achievementOverlay").style.display = "block";
+        addLogEntry("[Achievement] " + message);
+        playSound("cheer"); // optional audio feedback
+      }
+    }
+
+    function closeAchievement() {
+      document.getElementById("achievementOverlay").style.display = "none";
+    }
+
+    // Example usage:
+    // unlockAchievement("laws10");
+    // unlockAchievement("justice100");
+  </script>
+  <!-- Credits / Legacy Screen -->
+  <div id="creditsOverlay" class="credits-overlay">
+    <h2>LEGACY ARCHIVE</h2>
+    <p id="finalCountry">Country: ???</p>
+    <p id="finalLaws">Laws Enforced: 0</p>
+    <p id="finalCrises">Crises Survived: 0</p>
+    <p id="finalJustice">Justice ⚖️: 0%</p>
+    <p id="finalPower">Power ⚡: 0%</p>
+    <p id="finalChaos">Chaos 🌪️: 0%</p>
+
+    <div class="credits-scroll">
+      <p id="creditsText">
+        Thank you for playing President Sim.<br>
+        Designed & Vaulted by Ashaz.<br>
+        Mythic Suite: Pet.exe, NCU, RPAA, Reflex Protocol.<br>
+        Legacy expands with every presidency...
+      </p>
+    </div>
+
+    <button onclick="returnToTitle()">Return to Title</button>
+  </div>
+
+  <style>
+    .credits-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      color: white;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      text-align: center;
+      display: none; /* hidden until triggered */
+      z-index: 1500;
+      padding-top: 60px;
+    }
+
+    .credits-overlay h2 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px #000;
+    }
+
+    .credits-overlay p {
+      margin: 8px 0;
+    }
+
+    .credits-scroll {
+      margin-top: 30px;
+      height: 200px;
+      overflow-y: auto;
+      border-top: 2px solid white;
+      border-bottom: 2px solid white;
+      padding: 15px;
+    }
+
+    .credits-overlay button {
+      margin-top: 20px;
+      padding: 12px 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 2px solid white;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    function showCredits(finalStats) {
+      document.getElementById("finalCountry").textContent = "Country: " + finalStats.country;
+      document.getElementById("finalLaws").textContent = "Laws Enforced: " + finalStats.laws;
+      document.getElementById("finalCrises").textContent = "Crises Survived: " + finalStats.crises;
+      document.getElementById("finalJustice").textContent = "Justice ⚖️: " + finalStats.justice + "%";
+      document.getElementById("finalPower").textContent = "Power ⚡: " + finalStats.power + "%";
+      document.getElementById("finalChaos").textContent = "Chaos 🌪️: " + finalStats.chaos + "%";
+
+      document.getElementById("creditsOverlay").style.display = "block";
+      showDialogue("Legacy archived. Presidency complete.");
+    }
+
+    // Example usage:
+    // showCredits({country:"India", laws:12, crises:4, justice:80, power:65, chaos:20});
+  </script>
+  <!-- Flag + Anthem Overlay -->
+  <div id="anthemOverlay" class="anthem-overlay">
+    <img id="countryFlag" src="" alt="Country Flag" class="flag-animation">
+    <p id="anthemMessage">Playing National Anthem...</p>
+  </div>
+
+  <!-- Anthem Audio Elements -->
+  <audio id="anthemIndia" src="india-anthem.mp3" preload="auto"></audio>
+  <audio id="anthemJapan" src="japan-anthem.mp3" preload="auto"></audio>
+  <audio id="anthemUSA" src="usa-anthem.mp3" preload="auto"></audio>
+
+  <style>
+    .anthem-overlay {
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      background: rgba(0,0,0,0.7);
+      padding: 20px;
+      border: 2px solid white;
+      border-radius: 16px;
+      color: white;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      display: none; /* hidden until triggered */
+      z-index: 1100;
+    }
+
+    .flag-animation {
+      width: 120px;
+      height: auto;
+      animation: waveFlag 2s infinite ease-in-out;
+      margin-bottom: 15px;
+    }
+
+    @keyframes waveFlag {
+      0% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(2deg) scale(1.05); }
+      50% { transform: rotate(0deg) scale(1); }
+      75% { transform: rotate(-2deg) scale(1.05); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+  </style>
+
+  <script>
+    function playAnthem(country) {
+      const overlay = document.getElementById("anthemOverlay");
+      const flag = document.getElementById("countryFlag");
+      let anthem;
+
+      if (country === "India") {
+        flag.src = "india-flag.png";
+        anthem = document.getElementById("anthemIndia");
+      } else if (country === "Japan") {
+        flag.src = "japan-flag.png";
+        anthem = document.getElementById("anthemJapan");
+      } else {
+        flag.src = "usa-flag.png";
+        anthem = document.getElementById("anthemUSA");
+      }
+
+      overlay.style.display = "block";
+      document.getElementById("anthemMessage").textContent = "Playing " + country + " Anthem...";
+
+      anthem.currentTime = 0;
+      anthem.play();
+
+      // Hide overlay after anthem finishes (~5s snippet)
+      setTimeout(() => {
+        overlay.style.display = "none";
+      }, 5000);
+    }
+
+    // Example usage:
+    // playAnthem("India");
+    // playAnthem("Japan");
+    // playAnthem("USA");
+  </script>
+  <!-- Timeline Tracker -->
+  <div id="timelineTracker" class="timeline-tracker">
+    <h3>PRESIDENTIAL TIMELINE</h3>
+    <div id="timelineEvents" class="timeline-events"></div>
+  </div>
+
+  <style>
+    .timeline-tracker {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(0,0,0,0.85);
+      border-top: 2px solid white;
+      padding: 10px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 10px;
+      color: white;
+      text-align: left;
+      z-index: 1000;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .timeline-tracker h3 {
+      font-size: 12px;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .timeline-events {
+      display: inline-block;
+    }
+
+    .timeline-event {
+      display: inline-block;
+      margin: 0 10px;
+      padding: 5px 10px;
+      border: 1px solid white;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      text-align: center;
+    }
+
+    .timeline-event.law { color: #00ffcc; }
+    .timeline-event.crisis { color: #ff3300; }
+    .timeline-event.achievement { color: #ffff00; }
+  </style>
+
+  <script>
+    function addTimelineEvent(type, description) {
+      const eventDiv = document.createElement("div");
+      eventDiv.className = "timeline-event " + type;
+      eventDiv.textContent = description;
+
+      document.getElementById("timelineEvents").appendChild(eventDiv);
+      document.getElementById("timelineTracker").scrollLeft = document.getElementById("timelineTracker").scrollWidth;
+    }
+
+    // Example usage:
+    // addTimelineEvent("law", "Law #1: Tax Reform");
+    // addTimelineEvent("crisis", "Crisis Survived: Flood Relief");
+    // addTimelineEvent("achievement", "Unlocked: Justice 100%");
+  </script>
+  <!-- Cabinet Advisor Overlay -->
+  <div id="advisorOverlay" class="advisor-overlay">
+    <h3>Cabinet Advisor</h3>
+    <p id="advisorMessage">Advisor message will appear here.</p>
+    <button onclick="closeAdvisor()">Close</button>
+  </div>
+
+  <style>
+    .advisor-overlay {
+      position: fixed;
+      bottom: 20%;
+      right: 40px;
+      width: 300px;
+      background: rgba(0,0,0,0.85);
+      border: 2px solid white;
+      border-radius: 16px;
+      padding: 20px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      color: white;
+      text-align: center;
+      display: none; /* hidden until triggered */
+      z-index: 1100;
+    }
+
+    .advisor-overlay h3 {
+      font-size: 14px;
+      margin-bottom: 10px;
+      text-shadow: 1px 1px #000;
+    }
+
+    .advisor-overlay p {
+      margin-bottom: 15px;
+    }
+
+    .advisor-overlay button {
+      margin-top: 10px;
+      padding: 8px 20px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 2px solid white;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    const advisorMessages = {
+      economy: "💰 Advisor: This law may destabilize the economy.",
+      stability: "⚖️ Advisor: Citizens may resist this decision.",
+      approval: "📊 Advisor: Approval ratings could rise if you act swiftly.",
+      crisis: "🚨 Advisor: Handle this crisis carefully, rebels are watching.",
+      legacy: "🌟 Advisor: This choice will echo in your legacy."
+    };
+
+    function showAdvisor(type) {
+      const message = advisorMessages[type] || "Advisor: Consider the consequences carefully.";
+      document.getElementById("advisorMessage").textContent = message;
+      document.getElementById("advisorOverlay").style.display = "block";
+      addLogEntry("[Advisor] " + message);
+    }
+
+    function closeAdvisor() {
+      document.getElementById("advisorOverlay").style.display = "none";
+    }
+
+    // Example usage:
+    // showAdvisor("economy");
+    // showAdvisor("crisis");
+  </script>
+  <!-- Global Diplomacy Overlay -->
+  <div id="diplomacyOverlay" class="diplomacy-overlay">
+    <h2>GLOBAL DIPLOMACY</h2>
+    <p id="diplomacyMessage">Choose your diplomatic action:</p>
+
+    <div class="diplomacy-actions">
+      <button onclick="negotiateTreaty()">🤝 Negotiate Treaty</button>
+      <button onclick="proposeTrade()">💰 Propose Trade Deal</button>
+      <button onclick="declareRivalry()">⚔️ Declare Rivalry</button>
+    </div>
+
+    <button onclick="closeDiplomacy()">Close</button>
+  </div>
+
+  <style>
+    .diplomacy-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px;
+      background: rgba(0,0,0,0.85);
+      border: 3px solid white;
+      border-radius: 20px;
+      padding: 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      color: white;
+      text-align: center;
+      display: none; /* hidden until triggered */
+      z-index: 1200;
+    }
+
+    .diplomacy-overlay h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px #000;
+    }
+
+    .diplomacy-actions button {
+      margin: 10px;
+      padding: 12px 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 2px solid white;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    function openDiplomacy() {
+      document.getElementById("diplomacyOverlay").style.display = "block";
+      showDialogue("Global diplomacy initiated.");
+    }
+
+    function closeDiplomacy() {
+      document.getElementById("diplomacyOverlay").style.display = "none";
+    }
+
+    function negotiateTreaty() {
+      showDialogue("Treaty negotiations underway...");
+      addLogEntry("[Diplomacy] Treaty negotiations started.");
+      updateHUD(65, 70, 75); // example stat boost
+    }
+
+    function proposeTrade() {
+      showDialogue("Trade deal proposed.");
+      addLogEntry("[Diplomacy] Trade deal proposed.");
+      updateHUD(60, 60, 85); // economy boost
+    }
+
+    function declareRivalry() {
+      showDialogue("Rivalry declared!");
+      addLogEntry("[Diplomacy] Rivalry declared.");
+      updateHUD(55, 50, 65); // stability drop
+    }
+  </script>
+  <!-- Rebellion Simulation Overlay -->
+  <div id="rebellionOverlay" class="rebellion-overlay">
+    <h2>REBELLION!</h2>
+    <p id="rebellionMessage">Rebels are rising against your rule.</p>
+
+    <div class="rebellion-actions">
+      <button onclick="negotiateRebels()">🤝 Negotiate</button>
+      <button onclick="suppressRebels()">⚔️ Suppress</button>
+      <button onclick="appeaseRebels()">🍞 Appease</button>
+    </div>
+  </div>
+
+  <style>
+    .rebellion-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px;
+      background: rgba(0,0,0,0.9);
+      border: 3px solid red;
+      border-radius: 20px;
+      padding: 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      color: red;
+      text-align: center;
+      display: none; /* hidden until triggered */
+      z-index: 1300;
+      box-shadow: 0 0 20px red;
+    }
+
+    .rebellion-overlay h2 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px #000;
+    }
+
+    .rebellion-actions button {
+      margin: 10px;
+      padding: 12px 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: red;
+      border: 2px solid red;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    function triggerRebellion() {
+      document.getElementById("rebellionOverlay").style.display = "block";
+      document.getElementById("rebellionMessage").textContent = "Rebels are rising against your rule!";
+      addLogEntry("[Rebellion] Rebels have begun an uprising!");
+      playSound("rebel");
+    }
+
+    function negotiateRebels() {
+      showDialogue("Negotiations begin... Rebels demand reforms.");
+      addLogEntry("[Rebellion] Negotiations attempted.");
+      updateHUD(60, 70, 65); // stability boost, economy neutral
+      endRebellion();
+    }
+
+    function suppressRebels() {
+      showDialogue("Military suppression ordered. Stability may suffer.");
+      addLogEntry("[Rebellion] Suppression attempted.");
+      updateHUD(40, 50, 70); // approval drop, economy strain
+      endRebellion();
+    }
+
+    function appeaseRebels() {
+      showDialogue("Appeasement offered: food, subsidies, reforms.");
+      addLogEntry("[Rebellion] Appeasement attempted.");
+      updateHUD(70, 60, 55); // approval boost, economy drop
+      endRebellion();
+    }
+
+    function endRebellion() {
+      document.getElementById("rebellionOverlay").style.display = "none";
+      showDialogue("Rebellion resolved. Legacy altered.");
+    }
+  </script>
+  <!-- Mythic Archive Export Overlay -->
+  <div id="archiveOverlay" class="archive-overlay">
+    <h2>MYTHIC ARCHIVE EXPORT</h2>
+    <p id="archiveMessage">Compressing your presidency into the Vaultline...</p>
+    <button onclick="closeArchive()">Close</button>
+  </div>
+
+  <style>
+    .archive-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px;
+      background: rgba(0,0,0,0.9);
+      border: 3px solid cyan;
+      border-radius: 20px;
+      padding: 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      color: cyan;
+      text-align: center;
+      display: none; /* hidden until triggered */
+      z-index: 1400;
+      box-shadow: 0 0 20px cyan;
+    }
+
+    .archive-overlay h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px #000;
+    }
+
+    .archive-overlay p {
+      margin-bottom: 20px;
+    }
+
+    .archive-overlay button {
+      margin-top: 10px;
+      padding: 10px 25px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: cyan;
+      border: 2px solid cyan;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    function exportArchive(finalStats) {
+      const message = 
+        "Country: " + finalStats.country + " | " +
+        "Laws: " + finalStats.laws + " | " +
+        "Crises: " + finalStats.crises + " | " +
+        "Justice: " + finalStats.justice + "% | " +
+        "Power: " + finalStats.power + "% | " +
+        "Chaos: " + finalStats.chaos + "%";
+
+      document.getElementById("archiveMessage").textContent = message;
+      document.getElementById("archiveOverlay").style.display = "block";
+
+      addLogEntry("[Archive] Presidency exported: " + message);
+      showDialogue("Presidency compressed into Vaultline Archive.");
+    }
+
+    function closeArchive() {
+      document.getElementById("archiveOverlay").style.display = "none";
+    }
+
+    // Example usage:
+    // exportArchive({country:"Japan", laws:15, crises:5, justice:90, power:70, chaos:10});
+  </script>
+  <!-- Easter Egg Event Popup -->
+  <div id="easterEggPopup" class="easter-egg-popup">
+    <h2>EASTER EGG EVENT!</h2>
+    <p id="easterEggMessage">A mysterious event has appeared...</p>
+    <button onclick="closeEasterEgg()">Close</button>
+  </div>
+
+  <style>
+    .easter-egg-popup {
+      position: fixed;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 450px;
+      background: rgba(0,0,0,0.9);
+      border: 3px solid magenta;
+      border-radius: 20px;
+      padding: 25px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      color: magenta;
+      text-align: center;
+      display: none; /* hidden until triggered */
+      z-index: 1500;
+      box-shadow: 0 0 20px magenta;
+    }
+
+    .easter-egg-popup h2 {
+      font-size: 20px;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px #000;
+    }
+
+    .easter-egg-popup button {
+      margin-top: 15px;
+      padding: 10px 25px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: magenta;
+      border: 2px solid magenta;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    const easterEggEvents = [
+      "👾 Citizens discover Pet.exe running in the background!",
+      "🌌 Cosmic anomaly: Reflex Protocol echoes across the nation.",
+      "🎭 A clown rebellion demands laughter laws.",
+      "🐉 Mythic dragon spotted near the capital.",
+      "🕹️ Citizens unlock Retro Mode: pixel chaos unleashed."
+    ];
+
+    function triggerEasterEgg() {
+      const randomIndex = Math.floor(Math.random() * easterEggEvents.length);
+      const message = easterEggEvents[randomIndex];
+
+      document.getElementById("easterEggMessage").textContent = message;
+      document.getElementById("easterEggPopup").style.display = "block";
+
+      addLogEntry("[Easter Egg] " + message);
+      showDialogue("A rare event has occurred!");
+    }
+
+    function closeEasterEgg() {
+      document.getElementById("easterEggPopup").style.display = "none";
+    }
+
+    // Example usage:
+    // triggerEasterEgg();
+  </script>
+  <!-- Custom Presidency Mode Overlay -->
+  <div id="customModeOverlay" class="custom-mode-overlay">
+    <h2>CUSTOM PRESIDENCY MODE</h2>
+    <p>Define your own rules before starting:</p>
+
+    <div class="custom-section">
+      <label>📜 Starting Laws:</label>
+      <input type="number" id="customLaws" min="0" max="50" value="0">
+    </div>
+
+    <div class="custom-section">
+      <label>⚖️ Starting Approval (%):</label>
+      <input type="number" id="customApproval" min="0" max="100" value="60">
+    </div>
+
+    <div class="custom-section">
+      <label>💰 Starting Economy (%):</label>
+      <input type="number" id="customEconomy" min="0" max="100" value="70">
+    </div>
+
+    <div class="custom-section">
+      <label>🌪️ Chaos Threshold:</label>
+      <input type="number" id="customChaos" min="0" max="100" value="50">
+    </div>
+
+    <div class="custom-section">
+      <label>🎮 Difficulty Modifier:</label>
+      <select id="customDifficulty">
+        <option value="easy">Easy</option>
+        <option value="normal" selected>Normal</option>
+        <option value="hard">Hard</option>
+        <option value="cosmic">Cosmic</option>
+      </select>
+    </div>
+
+    <button onclick="applyCustomMode()">Apply Custom Mode</button>
+    <button onclick="closeCustomMode()">Close</button>
+  </div>
+
+  <style>
+    .custom-mode-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px;
+      background: rgba(0,0,0,0.9);
+      border: 3px solid lime;
+      border-radius: 20px;
+      padding: 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      color: lime;
+      text-align: center;
+      display: none; /* hidden until triggered */
+      z-index: 1600;
+      box-shadow: 0 0 20px lime;
+    }
+
+    .custom-section {
+      margin: 15px 0;
+    }
+
+    .custom-mode-overlay input,
+    .custom-mode-overlay select {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      padding: 5px;
+      border-radius: 8px;
+      border: 2px solid lime;
+      background: rgba(255,255,255,0.1);
+      color: lime;
+    }
+
+    .custom-mode-overlay button {
+      margin: 10px;
+      padding: 12px 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: lime;
+      border: 2px solid lime;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    function openCustomMode() {
+      document.getElementById("customModeOverlay").style.display = "block";
+      showDialogue("Custom Presidency Mode activated.");
+    }
+
+    function closeCustomMode() {
+      document.getElementById("customModeOverlay").style.display = "none";
+    }
+
+    function applyCustomMode() {
+      const laws = document.getElementById("customLaws").value;
+      const approval = document.getElementById("customApproval").value;
+      const economy = document.getElementById("customEconomy").value;
+      const chaos = document.getElementById("customChaos").value;
+      const difficulty = document.getElementById("customDifficulty").value;
+
+      const message = 
+        "Custom Mode: Laws " + laws + 
+        ", Approval " + approval + "%, Economy " + economy + "%, Chaos Threshold " + chaos + "%, Difficulty " + difficulty;
+
+      showDialogue(message);
+      addLogEntry("[Custom Mode] " + message);
+
+      closeCustomMode();
+    }
+  </script>
+  <!-- Multiplayer Overlay -->
+  <div id="multiplayerOverlay" class="multiplayer-overlay">
+    <h2>MULTIPLAYER MODE</h2>
+    <p id="multiplayerMessage">Two presidencies are active. Choose your mode:</p>
+
+    <div class="multiplayer-actions">
+      <button onclick="startCompetitive()">🏆 Competitive Mode</button>
+      <button onclick="startCooperative()">🤝 Cooperative Mode</button>
+    </div>
+
+    <div id="multiplayerStats" class="multiplayer-stats">
+      <h3>President A</h3>
+      <p id="presidentAStats">Approval: 60% | Stability: 55% | Economy: 70%</p>
+
+      <h3>President B</h3>
+      <p id="presidentBStats">Approval: 62% | Stability: 50% | Economy: 65%</p>
+    </div>
+
+    <button onclick="closeMultiplayer()">Close</button>
+  </div>
+
+  <style>
+    .multiplayer-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      background: rgba(0,0,0,0.9);
+      border: 3px solid orange;
+      border-radius: 20px;
+      padding: 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      color: orange;
+      text-align: center;
+      display: none; /* hidden until triggered */
+      z-index: 1700;
+      box-shadow: 0 0 20px orange;
+    }
+
+    .multiplayer-actions button,
+    .multiplayer-overlay button {
+      margin: 10px;
+      padding: 12px 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: orange;
+      border: 2px solid orange;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .multiplayer-stats {
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .multiplayer-stats h3 {
+      margin: 10px 0 5px;
+    }
+  </style>
+
+  <script>
+    function openMultiplayer() {
+      document.getElementById("multiplayerOverlay").style.display = "block";
+      showDialogue("Multiplayer Mode activated.");
+    }
+
+    function closeMultiplayer() {
+      document.getElementById("multiplayerOverlay").style.display = "none";
+    }
+
+    function startCompetitive() {
+      showDialogue("Competitive Mode: Race for highest approval!");
+      addLogEntry("[Multiplayer] Competitive Mode started.");
+    }
+
+    function startCooperative() {
+      showDialogue("Cooperative Mode: Joint crisis management engaged.");
+      addLogEntry("[Multiplayer] Cooperative Mode started.");
+    }
+
+    function updateMultiplayerStats(president, approval, stability, economy) {
+      const stats = "Approval: " + approval + "% | Stability: " + stability + "% | Economy: " + economy + "%";
+      if (president === "A") {
+        document.getElementById("presidentAStats").textContent = stats;
+      } else {
+        document.getElementById("presidentBStats").textContent = stats;
+      }
+    }
+
+    // Example usage:
+    // updateMultiplayerStats("A", 65, 60, 75);
+    // updateMultiplayerStats("B", 70, 55, 80);
+  </script>
+  <!-- Cosmic Mode Overlay -->
+  <div id="cosmicOverlay" class="cosmic-overlay">
+    <h2>COSMIC MODE 🌌</h2>
+    <p id="cosmicMessage">Reality bends. Your presidency enters the mythic plane...</p>
+
+    <div class="cosmic-actions">
+      <button onclick="invokeAnomaly()">🌠 Invoke Anomaly</button>
+      <button onclick="summonEntity()">👁️ Summon Entity</button>
+      <button onclick="distortLegacy()">🌀 Distort Legacy</button>
+    </div>
+
+    <button onclick="closeCosmic()">Close</button>
+  </div>
+
+  <style>
+    .cosmic-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 550px;
+      background: rgba(20,0,40,0.95);
+      border: 3px solid violet;
+      border-radius: 20px;
+      padding: 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      color: violet;
+      text-align: center;
+      display: none; /* hidden until triggered */
+      z-index: 1800;
+      box-shadow: 0 0 25px violet;
+      animation: cosmicPulse 3s infinite;
+    }
+
+    @keyframes cosmicPulse {
+      0% { box-shadow: 0 0 15px violet; }
+      50% { box-shadow: 0 0 40px magenta; }
+      100% { box-shadow: 0 0 15px violet; }
+    }
+
+    .cosmic-actions button {
+      margin: 10px;
+      padding: 12px 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: violet;
+      border: 2px solid violet;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    function openCosmic() {
+      document.getElementById("cosmicOverlay").style.display = "block";
+      showDialogue("Cosmic Mode activated. Reality bends...");
+      addLogEntry("[Cosmic Mode] Presidency entered mythic plane.");
+    }
+
+    function closeCosmic() {
+      document.getElementById("cosmicOverlay").style.display = "none";
+    }
+
+    function invokeAnomaly() {
+      showDialogue("Anomaly invoked: citizens experience paradoxical laws.");
+      addLogEntry("[Cosmic] Anomaly invoked.");
+      updateHUD(70, 40, 90); // surreal stat shifts
+    }
+
+    function summonEntity() {
+      showDialogue("Entity summoned: advisors replaced by cosmic beings.");
+      addLogEntry("[Cosmic] Entity summoned.");
+      updateHUD(50, 80, 60); // stability boost, approval drop
+    }
+
+    function distortLegacy() {
+      showDialogue("Legacy distorted: Vaultline entries rewritten in cosmic glyphs.");
+      addLogEntry("[Cosmic] Legacy distorted.");
+      updateHUD(60, 60, 60); // balanced but eerie
+    }
+  </script>
+  <!-- Final Vaultline Screen -->
+  <div id="vaultlineOverlay" class="vaultline-overlay">
+    <h2>FINAL VAULTLINE ENTRY</h2>
+    <p id="vaultlineMessage">Compressing presidency into eternal archive...</p>
+
+    <div class="vaultline-summary">
+      <p id="vaultlineStats">Stats will appear here.</p>
+      <p id="vaultlineLegacy">Legacy glyphs will appear here.</p>
+    </div>
+
+    <button onclick="returnToTitle()">Return to Title</button>
+  </div>
+
+  <style>
+    .vaultline-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      border-top: 5px solid cyan;
+      border-bottom: 5px solid magenta;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      color: white;
+      text-align: center;
+      display: none; /* hidden until triggered */
+      z-index: 2000;
+      padding-top: 60px;
+      animation: vaultlinePulse 4s infinite;
+    }
+
+    @keyframes vaultlinePulse {
+      0% { background: rgba(0,0,0,0.95); }
+      50% { background: rgba(20,0,40,0.95); }
+      100% { background: rgba(0,0,0,0.95); }
+    }
+
+    .vaultline-overlay h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px #000;
+    }
+
+    .vaultline-summary {
+      margin-top: 30px;
+      padding: 20px;
+      border: 2px solid white;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .vaultline-overlay button {
+      margin-top: 30px;
+      padding: 12px 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 2px solid white;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    function showFinalVaultline(finalStats, legacyGlyphs) {
+      const statsMessage = 
+        "Country: " + finalStats.country + " | " +
+        "Laws: " + finalStats.laws + " | " +
+        "Crises: " + finalStats.crises + " | " +
+        "Justice: " + finalStats.justice + "% | " +
+        "Power: " + finalStats.power + "% | " +
+        "Chaos: " + finalStats.chaos + "%";
+
+      document.getElementById("vaultlineStats").textContent = statsMessage;
+      document.getElementById("vaultlineLegacy").textContent = "Legacy Glyphs: " + legacyGlyphs;
+
+      document.getElementById("vaultlineOverlay").style.display = "block";
+      addLogEntry("[Vaultline] Final presidency compressed into eternal archive.");
+      showDialogue("Final Vaultline Entry created.");
+    }
+
+    // Example usage:
+    // showFinalVaultline(
+    //   {country:"USA", laws:20, crises:6, justice:85, power:70, chaos:15},
+    //   "⚖️⚡🌪️ Cosmic Glyphs of Justice, Power, Chaos"
+    // );
+  </script>
+</html>
+
+
